@@ -17,18 +17,21 @@ class AuthManager:
         self._setup_authenticator()
     
     def _setup_authenticator(self):
+        # Hash passwords for demo teams (password: "password123")
+        import streamlit_authenticator as stauth
+        
         config = {
             'credentials': {
                 'usernames': {
                     'team1': {
                         'email': 'team1@university.edu',
                         'name': 'Team 1',
-                        'password': '$2b$12$example_hashed_password'  # This should be properly hashed
+                        'password': '$2b$12$kEz1VhznDJRWN4pTuZkV7eIQ6qZi6yNNvWe/fLUCZhztG4ydT5SLy'  # password123
                     },
                     'team2': {
                         'email': 'team2@university.edu', 
                         'name': 'Team 2',
-                        'password': '$2b$12$example_hashed_password'
+                        'password': '$2b$12$kEz1VhznDJRWN4pTuZkV7eIQ6qZi6yNNvWe/fLUCZhztG4ydT5SLy'  # password123
                     }
                 }
             },
