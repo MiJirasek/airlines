@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud import firestore as firestore_client
+from google.oauth2 import service_account
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import json
@@ -17,6 +18,7 @@ class FirestoreManager:
     def _initialize_firestore(self):
         try:
             import os
+            import streamlit as st
             
             # Debug info
             print(f"DEBUG: Initializing Firestore with project_id: {Config.FIRESTORE_PROJECT_ID}")
@@ -26,6 +28,23 @@ class FirestoreManager:
             os.environ['GOOGLE_CLOUD_PROJECT'] = Config.FIRESTORE_PROJECT_ID
             print(f"DEBUG: Set GOOGLE_CLOUD_PROJECT to: {Config.FIRESTORE_PROJECT_ID}")
             
+            # Try direct approach with service account from Streamlit secrets
+            if hasattr(st, 'secrets') and 'gcp_service_account' in st.secrets:
+                print("DEBUG: Using direct service account from Streamlit secrets")
+                
+                # Create credentials directly from secrets
+                service_account_info = dict(st.secrets['gcp_service_account'])
+                credentials_obj = service_account.Credentials.from_service_account_info(service_account_info)
+                
+                # Use google-cloud-firestore client directly
+                self.db = firestore_client.Client(
+                    project=Config.FIRESTORE_PROJECT_ID,
+                    credentials=credentials_obj
+                )
+                print("DEBUG: Firestore client created successfully from secrets")
+                return
+            
+            # Fallback to firebase-admin approach
             if not firebase_admin._apps:
                 if Config.GOOGLE_APPLICATION_CREDENTIALS and os.path.exists(Config.GOOGLE_APPLICATION_CREDENTIALS):
                     print("DEBUG: Using service account credentials file")
@@ -40,9 +59,9 @@ class FirestoreManager:
                         'projectId': Config.FIRESTORE_PROJECT_ID,
                     })
             
-            # Create Firestore client with explicit project
-            self.db = firestore.client(project=Config.FIRESTORE_PROJECT_ID)
-            print("DEBUG: Firestore client created successfully")
+            # Create Firestore client via firebase-admin
+            self.db = firestore.client()
+            print("DEBUG: Firestore client created successfully via firebase-admin")
             
         except Exception as e:
             print(f"Error initializing Firestore: {e}")
