@@ -246,8 +246,12 @@ def show_plan_submission(team_id: str, db_manager: FirestoreManager):
         
         num_actions = st.number_input("Number of Actions", min_value=1, max_value=10, value=3)
         
-        actions = []
+        # Initialize collections for form data
+        actions_data = []
         total_cost = 0
+        
+        # Convert airline cash to int to avoid mixed numeric types
+        max_cash = int(airline_state.cash)
         
         for i in range(num_actions):
             st.write(f"**Action {i+1}**")
@@ -271,11 +275,13 @@ def show_plan_submission(team_id: str, db_manager: FirestoreManager):
                 cost = st.number_input(
                     f"Cost {i+1}",
                     min_value=0,
-                    max_value=airline_state.cash,
+                    max_value=max_cash,
+                    value=0,
                     key=f"cost_{i}"
                 )
                 
                 # Action-specific parameters
+                parameters = {}
                 if action_type == "purchase_aircraft":
                     aircraft_count = st.number_input(f"Aircraft Count {i+1}", min_value=1, value=1, key=f"aircraft_{i}")
                     parameters = {"count": aircraft_count}
@@ -285,17 +291,15 @@ def show_plan_submission(team_id: str, db_manager: FirestoreManager):
                 elif action_type == "marketing_campaign":
                     reputation_impact = st.slider(f"Reputation Impact {i+1}", 1, 10, 5, key=f"reputation_{i}")
                     parameters = {"reputation_impact": reputation_impact}
-                else:
-                    parameters = {}
             
+            # Store action data for processing after form submission
             if description and cost > 0:
-                action = AirlineAction(
-                    action_type=action_type,
-                    description=description,
-                    cost=float(cost),
-                    parameters=parameters
-                )
-                actions.append(action)
+                actions_data.append({
+                    'action_type': action_type,
+                    'description': description,
+                    'cost': cost,
+                    'parameters': parameters
+                })
                 total_cost += cost
         
         st.write(f"**Total Plan Cost: ${total_cost:,.0f}**")
@@ -317,7 +321,18 @@ def show_plan_submission(team_id: str, db_manager: FirestoreManager):
                     return
             
             # Process manual entry
-            elif actions:
+            elif actions_data:
+                # Convert actions_data to AirlineAction objects
+                actions = []
+                for action_data in actions_data:
+                    action = AirlineAction(
+                        action_type=action_data['action_type'],
+                        description=action_data['description'],
+                        cost=float(action_data['cost']),
+                        parameters=action_data['parameters']
+                    )
+                    actions.append(action)
+                
                 plan_data = {
                     "team_id": team_id,
                     "semester": semester,
