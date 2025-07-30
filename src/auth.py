@@ -51,7 +51,7 @@ class AuthManager:
         """
         Returns: (name, authentication_status, username)
         """
-        name, authentication_status, username = self.authenticator.login('Login', 'main')
+        name, authentication_status, username = self.authenticator.login(location='main')
         
         if authentication_status:
             self._ensure_airline_exists(username)
@@ -59,7 +59,7 @@ class AuthManager:
         return name, authentication_status, username
     
     def logout(self):
-        self.authenticator.logout('Logout', 'main')
+        self.authenticator.logout(location='main')
     
     def _ensure_airline_exists(self, team_id: str):
         existing_airline = self.db.get_airline_state(team_id)
