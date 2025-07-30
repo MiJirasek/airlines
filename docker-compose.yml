@@ -1,0 +1,16 @@
+version: "3.9"          # 3.x schema, ověřeno s Compose v2
+services:
+  claude:
+    image: ghcr.io/zeeno-atl/claude-code:latest   # či jiný tag, např. "1.4.0"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - TZ=Europe/Prague
+    volumes:
+      - .:/app               # projektová složka
+      - claude-cache:/root/.npm     # oddělená cache balíků
+    working_dir: /app
+    stdin_open: true                # ↔ -i  (interaktivní)
+    tty: true                       # ↔ -t  (pseudo‑TTY)
+
+volumes:
+  claude-cache:

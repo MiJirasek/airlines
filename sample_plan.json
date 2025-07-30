@@ -1,0 +1,54 @@
+{
+  "team_id": "team1",
+  "semester": "2024-1",
+  "total_budget": 500000,
+  "actions": [
+    {
+      "action_type": "purchase_aircraft",
+      "description": "Purchase 2 Boeing 737-800 aircraft for domestic expansion",
+      "cost": 180000,
+      "parameters": {
+        "count": 2,
+        "aircraft_type": "Boeing 737-800"
+      }
+    },
+    {
+      "action_type": "add_route",
+      "description": "Launch new route from Prague to London Heathrow",
+      "cost": 75000,
+      "parameters": {
+        "route": "PRG-LHR",
+        "frequency": "daily"
+      }
+    },
+    {
+      "action_type": "marketing_campaign",
+      "description": "Brand awareness campaign targeting business travelers",
+      "cost": 120000,
+      "parameters": {
+        "target_audience": "business",
+        "duration_months": 6,
+        "reputation_impact": 8
+      }
+    },
+    {
+      "action_type": "staff_training",
+      "description": "Customer service excellence training for cabin crew",
+      "cost": 45000,
+      "parameters": {
+        "training_type": "customer_service",
+        "staff_count": 150
+      }
+    },
+    {
+      "action_type": "maintenance_upgrade",
+      "description": "Upgrade maintenance facilities with new diagnostic equipment",
+      "cost": 80000,
+      "parameters": {
+        "facility_type": "diagnostic",
+        "efficiency_improvement": 15
+      }
+    }
+  ],
+  "submission_timestamp": "2024-01-15T10:30:00"
+}
