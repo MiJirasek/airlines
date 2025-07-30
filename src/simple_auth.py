@@ -118,3 +118,8 @@ class SimpleAuthManager:
     def is_authenticated(self) -> bool:
         """Check if user is authenticated"""
         return st.session_state.get('authentication_status', False)
+    
+    def is_instructor(self) -> bool:
+        """Check if current user is an instructor"""
+        username = self.get_current_user()
+        return username in ['instructor', 'admin']

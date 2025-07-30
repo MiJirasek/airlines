@@ -9,6 +9,7 @@ from src.database import FirestoreManager
 from src.models import SemesterPlan, AirlineAction
 from src.workflow import SimulationWorkflow
 from src.config import Config
+from src.instructor_dashboard import InstructorDashboard
 
 
 def setup_streamlit_secrets():
@@ -138,27 +139,54 @@ def main():
         st.warning('Please enter your username and password')
         return
     elif authentication_status:
-        # Main application
-        with st.sidebar:
-            st.write(f'Welcome *{name}*')
-            if st.button("Logout"):
-                auth_manager.logout()
+        # Check if user is instructor
+        if auth_manager.is_instructor():
+            # Instructor interface
+            with st.sidebar:
+                st.write(f'Welcome *{name}* (Instructor)')
+                if st.button("Logout"):
+                    auth_manager.logout()
+                
+                st.divider()
+                
+                interface_type = st.radio(
+                    "Interface Mode",
+                    ["📊 Instructor Dashboard", "👥 Student View"]
+                )
             
-            st.divider()
-            
-            page = st.selectbox(
-                "Navigation",
-                ["Dashboard", "Submit Plan", "Market Analysis", "Feedback History"]
-            )
+            if interface_type == "📊 Instructor Dashboard":
+                instructor_dashboard = InstructorDashboard()
+                instructor_dashboard.show_dashboard()
+            else:
+                # Show student interface for testing
+                show_student_interface(username, db_manager, auth_manager)
+        else:
+            # Student interface
+            show_student_interface(username, db_manager, auth_manager)
+
+
+def show_student_interface(username, db_manager, auth_manager):
+    """Standard student interface"""
+    with st.sidebar:
+        st.write(f'Welcome *{username.upper()}*')
+        if st.button("Logout"):
+            auth_manager.logout()
         
-        if page == "Dashboard":
-            show_dashboard(username, db_manager)
-        elif page == "Submit Plan":
-            show_plan_submission(username, db_manager)
-        elif page == "Market Analysis":
-            show_market_analysis(db_manager)
-        elif page == "Feedback History":
-            show_feedback_history(username, db_manager)
+        st.divider()
+        
+        page = st.selectbox(
+            "Navigation",
+            ["Dashboard", "Submit Plan", "Market Analysis", "Feedback History"]
+        )
+    
+    if page == "Dashboard":
+        show_dashboard(username, db_manager)
+    elif page == "Submit Plan":
+        show_plan_submission(username, db_manager)
+    elif page == "Market Analysis":
+        show_market_analysis(db_manager)
+    elif page == "Feedback History":
+        show_feedback_history(username, db_manager)
 
 
 def show_dashboard(team_id: str, db_manager: FirestoreManager):
