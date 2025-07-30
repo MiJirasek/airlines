@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 import os
 
-from src.auth import AuthManager
+from src.simple_auth import SimpleAuthManager
 from src.database import FirestoreManager
 from src.models import SemesterPlan, AirlineAction
 from src.workflow import SimulationWorkflow
@@ -121,7 +121,7 @@ def main():
     
     # Initialize managers with error handling
     try:
-        auth_manager = AuthManager()
+        auth_manager = SimpleAuthManager()
         db_manager = FirestoreManager()
     except Exception as e:
         st.error(f"Failed to initialize application: {e}")
@@ -141,7 +141,8 @@ def main():
         # Main application
         with st.sidebar:
             st.write(f'Welcome *{name}*')
-            auth_manager.logout()
+            if st.button("Logout"):
+                auth_manager.logout()
             
             st.divider()
             
