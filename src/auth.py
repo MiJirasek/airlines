@@ -51,12 +51,20 @@ class AuthManager:
         """
         Returns: (name, authentication_status, username)
         """
-        name, authentication_status, username = self.authenticator.login(location='main')
-        
-        if authentication_status:
-            self._ensure_airline_exists(username)
-        
-        return name, authentication_status, username
+        try:
+            result = self.authenticator.login(location='main')
+            if result is None:
+                return None, None, None
+            
+            name, authentication_status, username = result
+            
+            if authentication_status:
+                self._ensure_airline_exists(username)
+            
+            return name, authentication_status, username
+        except Exception as e:
+            st.error(f"Authentication error: {e}")
+            return None, None, None
     
     def logout(self):
         self.authenticator.logout(location='main')
