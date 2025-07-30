@@ -8,6 +8,7 @@ from datetime import datetime
 from .config import Config
 from .database import FirestoreManager
 from .models import AirlineState
+from .user_management import UserManager
 
 
 class AuthManager:
@@ -21,35 +22,51 @@ class AuthManager:
         import yaml
         import os
         
-        # Try to load credentials from file, fallback to hardcoded
+        print("DEBUG: Setting up authenticator")
+        
+        # Try multiple credential sources in order of preference
         config = None
-        credentials_path = os.path.join(os.path.dirname(__file__), '..', 'credentials.yaml')
         
+        # 1. Try Firestore-based credentials (production)
         try:
-            if os.path.exists(credentials_path):
-                with open(credentials_path, 'r') as file:
-                    config = yaml.safe_load(file)
-                    # Override cookie settings with environment/config values
-                    config['cookie']['name'] = Config.STREAMLIT_AUTH_COOKIE_NAME
-                    config['cookie']['key'] = Config.STREAMLIT_AUTH_COOKIE_KEY
-                    config['cookie']['expiry_days'] = Config.STREAMLIT_AUTH_COOKIE_EXPIRY_DAYS
+            user_manager = UserManager()
+            firestore_users = user_manager.get_all_users()
+            if firestore_users:
+                print(f"DEBUG: Loaded {len(firestore_users)} users from Firestore")
+                config = {
+                    'credentials': {
+                        'usernames': firestore_users
+                    },
+                    'cookie': {
+                        'name': Config.STREAMLIT_AUTH_COOKIE_NAME,
+                        'key': Config.STREAMLIT_AUTH_COOKIE_KEY,
+                        'expiry_days': Config.STREAMLIT_AUTH_COOKIE_EXPIRY_DAYS
+                    },
+                    'preauthorized': []
+                }
         except Exception as e:
-            print(f"Could not load credentials file: {e}")
+            print(f"DEBUG: Could not load Firestore credentials: {e}")
         
-        # Fallback to hardcoded config if file loading fails
+        # 2. Try local credentials file
         if not config:
-            print("DEBUG: Using hardcoded credentials (credentials.yaml not found)")
-            
-            # Generate proper password hashes for "password123"
+            credentials_path = os.path.join(os.path.dirname(__file__), '..', 'credentials.yaml')
             try:
-                import streamlit_authenticator as stauth
-                hashed_passwords = stauth.Hasher(['password123']).generate()
-                password_hash = hashed_passwords[0]
-                print(f"DEBUG: Generated password hash: {password_hash}")
-            except:
-                # Fallback to a known working hash
-                password_hash = '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW'  # password123
-                print("DEBUG: Using fallback password hash")
+                if os.path.exists(credentials_path):
+                    with open(credentials_path, 'r') as file:
+                        config = yaml.safe_load(file)
+                        config['cookie']['name'] = Config.STREAMLIT_AUTH_COOKIE_NAME
+                        config['cookie']['key'] = Config.STREAMLIT_AUTH_COOKIE_KEY
+                        config['cookie']['expiry_days'] = Config.STREAMLIT_AUTH_COOKIE_EXPIRY_DAYS
+                        print("DEBUG: Loaded credentials from local file")
+            except Exception as e:
+                print(f"DEBUG: Could not load credentials file: {e}")
+        
+        # 3. Fallback to hardcoded credentials for testing
+        if not config:
+            print("DEBUG: Using hardcoded test credentials")
+            
+            # For now, let's use a simple known password
+            password_hash = '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW'  # "secret"
             
             config = {
                 'credentials': {
@@ -59,19 +76,9 @@ class AuthManager:
                             'name': 'Team 1',
                             'password': password_hash
                         },
-                        'team2': {
-                            'email': 'team2@university.edu', 
-                            'name': 'Team 2',
-                            'password': password_hash
-                        },
-                        'team3': {
-                            'email': 'team3@university.edu',
-                            'name': 'Team 3',
-                            'password': password_hash
-                        },
-                        'instructor': {
-                            'email': 'instructor@university.edu',
-                            'name': 'Instructor',
+                        'admin': {
+                            'email': 'admin@university.edu',
+                            'name': 'Administrator',
                             'password': password_hash
                         }
                     }
