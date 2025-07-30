@@ -27,9 +27,22 @@ class Config:
     @classmethod
     def validate_required_config(cls):
         """Validate that required configuration is present"""
+        # Try to get from streamlit secrets if environment variables are missing
+        import streamlit as st
+        
+        firestore_id = cls.FIRESTORE_PROJECT_ID
+        gemini_key = cls.GEMINI_API_KEY
+        
+        # Fallback to direct secrets access if env vars are empty
+        if not firestore_id and hasattr(st, 'secrets') and 'FIRESTORE_PROJECT_ID' in st.secrets:
+            firestore_id = st.secrets['FIRESTORE_PROJECT_ID']
+            
+        if not gemini_key and hasattr(st, 'secrets') and 'GEMINI_API_KEY' in st.secrets:
+            gemini_key = st.secrets['GEMINI_API_KEY']
+        
         required_vars = {
-            "FIRESTORE_PROJECT_ID": cls.FIRESTORE_PROJECT_ID,
-            "GEMINI_API_KEY": cls.GEMINI_API_KEY,
+            "FIRESTORE_PROJECT_ID": firestore_id,
+            "GEMINI_API_KEY": gemini_key,
         }
         
         missing_vars = [var for var, value in required_vars.items() if not value]
