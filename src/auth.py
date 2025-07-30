@@ -17,31 +17,49 @@ class AuthManager:
         self._setup_authenticator()
     
     def _setup_authenticator(self):
-        # Hash passwords for demo teams (password: "password123")
         import streamlit_authenticator as stauth
+        import yaml
+        import os
         
-        config = {
-            'credentials': {
-                'usernames': {
-                    'team1': {
-                        'email': 'team1@university.edu',
-                        'name': 'Team 1',
-                        'password': '$2b$12$kEz1VhznDJRWN4pTuZkV7eIQ6qZi6yNNvWe/fLUCZhztG4ydT5SLy'  # password123
-                    },
-                    'team2': {
-                        'email': 'team2@university.edu', 
-                        'name': 'Team 2',
-                        'password': '$2b$12$kEz1VhznDJRWN4pTuZkV7eIQ6qZi6yNNvWe/fLUCZhztG4ydT5SLy'  # password123
+        # Try to load credentials from file, fallback to hardcoded
+        config = None
+        credentials_path = os.path.join(os.path.dirname(__file__), '..', 'credentials.yaml')
+        
+        try:
+            if os.path.exists(credentials_path):
+                with open(credentials_path, 'r') as file:
+                    config = yaml.safe_load(file)
+                    # Override cookie settings with environment/config values
+                    config['cookie']['name'] = Config.STREAMLIT_AUTH_COOKIE_NAME
+                    config['cookie']['key'] = Config.STREAMLIT_AUTH_COOKIE_KEY
+                    config['cookie']['expiry_days'] = Config.STREAMLIT_AUTH_COOKIE_EXPIRY_DAYS
+        except Exception as e:
+            print(f"Could not load credentials file: {e}")
+        
+        # Fallback to hardcoded config if file loading fails
+        if not config:
+            config = {
+                'credentials': {
+                    'usernames': {
+                        'team1': {
+                            'email': 'team1@university.edu',
+                            'name': 'Team 1',
+                            'password': '$2b$12$kEz1VhznDJRWN4pTuZkV7eIQ6qZi6yNNvWe/fLUCZhztG4ydT5SLy'  # password123
+                        },
+                        'team2': {
+                            'email': 'team2@university.edu', 
+                            'name': 'Team 2',
+                            'password': '$2b$12$kEz1VhznDJRWN4pTuZkV7eIQ6qZi6yNNvWe/fLUCZhztG4ydT5SLy'  # password123
+                        }
                     }
-                }
-            },
-            'cookie': {
-                'name': Config.STREAMLIT_AUTH_COOKIE_NAME,
-                'key': Config.STREAMLIT_AUTH_COOKIE_KEY,
-                'expiry_days': Config.STREAMLIT_AUTH_COOKIE_EXPIRY_DAYS
-            },
-            'preauthorized': []
-        }
+                },
+                'cookie': {
+                    'name': Config.STREAMLIT_AUTH_COOKIE_NAME,
+                    'key': Config.STREAMLIT_AUTH_COOKIE_KEY,
+                    'expiry_days': Config.STREAMLIT_AUTH_COOKIE_EXPIRY_DAYS
+                },
+                'preauthorized': []
+            }
         
         self.authenticator = stauth.Authenticate(
             config['credentials'],
