@@ -16,18 +16,31 @@ class FirestoreManager:
     
     def _initialize_firestore(self):
         try:
+            # Debug info
+            print(f"DEBUG: Initializing Firestore with project_id: {Config.FIRESTORE_PROJECT_ID}")
+            print(f"DEBUG: GOOGLE_APPLICATION_CREDENTIALS path: {Config.GOOGLE_APPLICATION_CREDENTIALS}")
+            
             if not firebase_admin._apps:
                 if Config.GOOGLE_APPLICATION_CREDENTIALS:
+                    print("DEBUG: Using service account credentials")
                     cred = credentials.Certificate(Config.GOOGLE_APPLICATION_CREDENTIALS)
                     firebase_admin.initialize_app(cred, {
                         'projectId': Config.FIRESTORE_PROJECT_ID,
                     })
                 else:
-                    firebase_admin.initialize_app()
+                    print("DEBUG: Using default credentials")
+                    # For Streamlit Cloud, we need to explicitly set the project
+                    firebase_admin.initialize_app(options={
+                        'projectId': Config.FIRESTORE_PROJECT_ID,
+                    })
             
             self.db = firestore.client()
+            print("DEBUG: Firestore client created successfully")
+            
         except Exception as e:
             print(f"Error initializing Firestore: {e}")
+            import traceback
+            traceback.print_exc()
             raise
     
     def get_airline_state(self, team_id: str) -> Optional[AirlineState]:

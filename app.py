@@ -39,13 +39,24 @@ def setup_streamlit_secrets():
                 import tempfile
                 import json
                 
+                print("DEBUG: Setting up GCP credentials from secrets")
                 # Create temporary credentials file from secrets
                 gcp_creds = dict(st.secrets['gcp_service_account'])
                 
                 # Create temporary file
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
                     json.dump(gcp_creds, f)
+                    f.flush()  # Ensure data is written
                     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+                    print(f"DEBUG: Created credentials file at: {f.name}")
+                    
+                # Verify the file was created and contains data
+                try:
+                    with open(f.name, 'r') as verify_f:
+                        verify_data = json.load(verify_f)
+                        print(f"DEBUG: Credentials file contains project_id: {verify_data.get('project_id')}")
+                except Exception as verify_e:
+                    print(f"DEBUG: Error verifying credentials file: {verify_e}")
         else:
             print("DEBUG: No secrets available")
     except Exception as e:
