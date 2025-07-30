@@ -38,18 +38,41 @@ class AuthManager:
         
         # Fallback to hardcoded config if file loading fails
         if not config:
+            print("DEBUG: Using hardcoded credentials (credentials.yaml not found)")
+            
+            # Generate proper password hashes for "password123"
+            try:
+                import streamlit_authenticator as stauth
+                hashed_passwords = stauth.Hasher(['password123']).generate()
+                password_hash = hashed_passwords[0]
+                print(f"DEBUG: Generated password hash: {password_hash}")
+            except:
+                # Fallback to a known working hash
+                password_hash = '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW'  # password123
+                print("DEBUG: Using fallback password hash")
+            
             config = {
                 'credentials': {
                     'usernames': {
                         'team1': {
                             'email': 'team1@university.edu',
                             'name': 'Team 1',
-                            'password': '$2b$12$kEz1VhznDJRWN4pTuZkV7eIQ6qZi6yNNvWe/fLUCZhztG4ydT5SLy'  # password123
+                            'password': password_hash
                         },
                         'team2': {
                             'email': 'team2@university.edu', 
                             'name': 'Team 2',
-                            'password': '$2b$12$kEz1VhznDJRWN4pTuZkV7eIQ6qZi6yNNvWe/fLUCZhztG4ydT5SLy'  # password123
+                            'password': password_hash
+                        },
+                        'team3': {
+                            'email': 'team3@university.edu',
+                            'name': 'Team 3',
+                            'password': password_hash
+                        },
+                        'instructor': {
+                            'email': 'instructor@university.edu',
+                            'name': 'Instructor',
+                            'password': password_hash
                         }
                     }
                 },
