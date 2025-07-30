@@ -18,8 +18,23 @@ class Config:
     
     # Streamlit Authentication
     STREAMLIT_AUTH_COOKIE_NAME = os.getenv("STREAMLIT_AUTH_COOKIE_NAME", "airline_sim_auth")
-    STREAMLIT_AUTH_COOKIE_KEY = os.getenv("STREAMLIT_AUTH_COOKIE_KEY")
+    STREAMLIT_AUTH_COOKIE_KEY = os.getenv("STREAMLIT_AUTH_COOKIE_KEY", "default-dev-key-change-in-production")
     STREAMLIT_AUTH_COOKIE_EXPIRY_DAYS = int(os.getenv("STREAMLIT_AUTH_COOKIE_EXPIRY_DAYS", "30"))
     
     # Simulation Settings
     MAX_SEMESTER_BUDGET = 1000000  # Default budget per semester
+    
+    @classmethod
+    def validate_required_config(cls):
+        """Validate that required configuration is present"""
+        required_vars = {
+            "FIRESTORE_PROJECT_ID": cls.FIRESTORE_PROJECT_ID,
+            "GEMINI_API_KEY": cls.GEMINI_API_KEY,
+        }
+        
+        missing_vars = [var for var, value in required_vars.items() if not value]
+        
+        if missing_vars:
+            raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
+        
+        return True

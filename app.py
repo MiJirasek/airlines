@@ -2,11 +2,41 @@ import streamlit as st
 import json
 from datetime import datetime
 import pandas as pd
+import os
 
 from src.auth import AuthManager
 from src.database import FirestoreManager
 from src.models import SemesterPlan, AirlineAction
 from src.workflow import SimulationWorkflow
+from src.config import Config
+
+
+def setup_streamlit_secrets():
+    """Setup environment variables from Streamlit secrets for cloud deployment"""
+    if 'FIRESTORE_PROJECT_ID' in st.secrets:
+        os.environ['FIRESTORE_PROJECT_ID'] = st.secrets['FIRESTORE_PROJECT_ID']
+    
+    if 'GEMINI_API_KEY' in st.secrets:
+        os.environ['GEMINI_API_KEY'] = st.secrets['GEMINI_API_KEY']
+    
+    if 'LANGSMITH_API_KEY' in st.secrets:
+        os.environ['LANGSMITH_API_KEY'] = st.secrets['LANGSMITH_API_KEY']
+    
+    if 'STREAMLIT_AUTH_COOKIE_KEY' in st.secrets:
+        os.environ['STREAMLIT_AUTH_COOKIE_KEY'] = st.secrets['STREAMLIT_AUTH_COOKIE_KEY']
+    
+    # Setup Google Cloud credentials from Streamlit secrets
+    if 'gcp_service_account' in st.secrets:
+        import tempfile
+        import json
+        
+        # Create temporary credentials file from secrets
+        gcp_creds = dict(st.secrets['gcp_service_account'])
+        
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(gcp_creds, f)
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
 
 
 def main():
@@ -16,11 +46,32 @@ def main():
         layout="wide"
     )
     
+    # Configuration validation and setup
+    try:
+        # For Streamlit Cloud, use secrets instead of environment variables
+        if hasattr(st, 'secrets'):
+            setup_streamlit_secrets()
+        
+        Config.validate_required_config()
+    except ValueError as e:
+        st.error(f"Configuration Error: {e}")
+        st.info("Please ensure all required environment variables or Streamlit secrets are configured.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Initialization Error: {e}")
+        st.info("Please check your configuration and try again.")
+        st.stop()
+    
     st.title("✈️ Airline Competition Simulation")
     
-    # Initialize managers
-    auth_manager = AuthManager()
-    db_manager = FirestoreManager()
+    # Initialize managers with error handling
+    try:
+        auth_manager = AuthManager()
+        db_manager = FirestoreManager()
+    except Exception as e:
+        st.error(f"Failed to initialize application: {e}")
+        st.info("Please check your database and authentication configuration.")
+        st.stop()
     
     # Authentication
     name, authentication_status, username = auth_manager.login()
