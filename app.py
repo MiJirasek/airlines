@@ -13,30 +13,35 @@ from src.config import Config
 
 def setup_streamlit_secrets():
     """Setup environment variables from Streamlit secrets for cloud deployment"""
-    if 'FIRESTORE_PROJECT_ID' in st.secrets:
-        os.environ['FIRESTORE_PROJECT_ID'] = st.secrets['FIRESTORE_PROJECT_ID']
-    
-    if 'GEMINI_API_KEY' in st.secrets:
-        os.environ['GEMINI_API_KEY'] = st.secrets['GEMINI_API_KEY']
-    
-    if 'LANGSMITH_API_KEY' in st.secrets:
-        os.environ['LANGSMITH_API_KEY'] = st.secrets['LANGSMITH_API_KEY']
-    
-    if 'STREAMLIT_AUTH_COOKIE_KEY' in st.secrets:
-        os.environ['STREAMLIT_AUTH_COOKIE_KEY'] = st.secrets['STREAMLIT_AUTH_COOKIE_KEY']
-    
-    # Setup Google Cloud credentials from Streamlit secrets
-    if 'gcp_service_account' in st.secrets:
-        import tempfile
-        import json
-        
-        # Create temporary credentials file from secrets
-        gcp_creds = dict(st.secrets['gcp_service_account'])
-        
-        # Create temporary file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(gcp_creds, f)
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+    try:
+        if hasattr(st, 'secrets') and st.secrets:
+            if 'FIRESTORE_PROJECT_ID' in st.secrets:
+                os.environ['FIRESTORE_PROJECT_ID'] = str(st.secrets['FIRESTORE_PROJECT_ID'])
+            
+            if 'GEMINI_API_KEY' in st.secrets:
+                os.environ['GEMINI_API_KEY'] = str(st.secrets['GEMINI_API_KEY'])
+            
+            if 'LANGSMITH_API_KEY' in st.secrets:
+                os.environ['LANGSMITH_API_KEY'] = str(st.secrets['LANGSMITH_API_KEY'])
+            
+            if 'STREAMLIT_AUTH_COOKIE_KEY' in st.secrets:
+                os.environ['STREAMLIT_AUTH_COOKIE_KEY'] = str(st.secrets['STREAMLIT_AUTH_COOKIE_KEY'])
+            
+            # Setup Google Cloud credentials from Streamlit secrets
+            if 'gcp_service_account' in st.secrets:
+                import tempfile
+                import json
+                
+                # Create temporary credentials file from secrets
+                gcp_creds = dict(st.secrets['gcp_service_account'])
+                
+                # Create temporary file
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                    json.dump(gcp_creds, f)
+                    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+    except Exception as e:
+        st.error(f"Error setting up secrets: {e}")
+        pass  # Continue with environment variables if secrets fail
 
 
 def main():
@@ -49,13 +54,21 @@ def main():
     # Configuration validation and setup
     try:
         # For Streamlit Cloud, use secrets instead of environment variables
-        if hasattr(st, 'secrets'):
-            setup_streamlit_secrets()
+        setup_streamlit_secrets()
         
         Config.validate_required_config()
     except ValueError as e:
         st.error(f"Configuration Error: {e}")
         st.info("Please ensure all required environment variables or Streamlit secrets are configured.")
+        
+        # Debug info
+        st.write("Debug Info:")
+        if hasattr(st, 'secrets'):
+            available_secrets = list(st.secrets.keys()) if st.secrets else []
+            st.write(f"Available secrets: {available_secrets}")
+        else:
+            st.write("No secrets object found")
+        
         st.stop()
     except Exception as e:
         st.error(f"Initialization Error: {e}")
