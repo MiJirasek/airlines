@@ -84,29 +84,45 @@ class AuthManager:
                 'preauthorized': []
             }
         
+        # Debug: Show loaded usernames
+        usernames = list(config['credentials']['usernames'].keys())
+        print(f"DEBUG: Loaded usernames: {usernames}")
+        
         self.authenticator = stauth.Authenticate(
             config['credentials'],
             config['cookie']['name'],
             config['cookie']['key'],
             config['cookie']['expiry_days']
         )
+        print("DEBUG: Authenticator created successfully")
     
     def login(self) -> tuple[Optional[str], Optional[str], Optional[bool]]:
         """
         Returns: (name, authentication_status, username)
         """
         try:
+            print("DEBUG: Calling authenticator.login()")
             result = self.authenticator.login(location='main')
+            print(f"DEBUG: Login result: {result}")
+            
             if result is None:
+                print("DEBUG: Login returned None")
                 return None, None, None
             
             name, authentication_status, username = result
+            print(f"DEBUG: Parsed login - name: {name}, status: {authentication_status}, username: {username}")
             
             if authentication_status:
+                print(f"DEBUG: Login successful for {username}")
                 self._ensure_airline_exists(username)
+            elif authentication_status is False:
+                print("DEBUG: Login failed - invalid credentials")
+            else:
+                print("DEBUG: Login status is None - waiting for input")
             
             return name, authentication_status, username
         except Exception as e:
+            print(f"DEBUG: Authentication error: {e}")
             st.error(f"Authentication error: {e}")
             return None, None, None
     
