@@ -1,0 +1,104 @@
+# Environment variables (contains sensitive credentials)
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables and secrets
+.env
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Google Cloud credentials and service account keys
+*service-account*.json
+*credentials*.json
+*firebase*.json
+*firestore*.json
+*gcp*.json
+*google*.json
+*serviceAccountKey*.json
+airline-simulation-*.json
+
+# Keep sample files
+!sample_plan.json
+
+# Other secret files
+secrets.yaml
+secrets.yml
+config.secret.*
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Streamlit
+.streamlit/
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite3
+
+# Cache
+.cache/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Temporary files
+*.tmp
+*.temp
