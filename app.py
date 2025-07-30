@@ -15,11 +15,18 @@ def setup_streamlit_secrets():
     """Setup environment variables from Streamlit secrets for cloud deployment"""
     try:
         if hasattr(st, 'secrets') and st.secrets:
+            # Debug: Show what secrets we're trying to read
+            print(f"DEBUG: Available secrets keys: {list(st.secrets.keys())}")
+            
             if 'FIRESTORE_PROJECT_ID' in st.secrets:
-                os.environ['FIRESTORE_PROJECT_ID'] = str(st.secrets['FIRESTORE_PROJECT_ID'])
+                value = str(st.secrets['FIRESTORE_PROJECT_ID'])
+                os.environ['FIRESTORE_PROJECT_ID'] = value
+                print(f"DEBUG: Set FIRESTORE_PROJECT_ID")
             
             if 'GEMINI_API_KEY' in st.secrets:
-                os.environ['GEMINI_API_KEY'] = str(st.secrets['GEMINI_API_KEY'])
+                value = str(st.secrets['GEMINI_API_KEY'])
+                os.environ['GEMINI_API_KEY'] = value
+                print(f"DEBUG: Set GEMINI_API_KEY")
             
             if 'LANGSMITH_API_KEY' in st.secrets:
                 os.environ['LANGSMITH_API_KEY'] = str(st.secrets['LANGSMITH_API_KEY'])
@@ -39,7 +46,10 @@ def setup_streamlit_secrets():
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
                     json.dump(gcp_creds, f)
                     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+        else:
+            print("DEBUG: No secrets available")
     except Exception as e:
+        print(f"DEBUG: Error setting up secrets: {e}")
         st.error(f"Error setting up secrets: {e}")
         pass  # Continue with environment variables if secrets fail
 
@@ -64,8 +74,29 @@ def main():
         # Debug info
         st.write("Debug Info:")
         if hasattr(st, 'secrets'):
-            available_secrets = list(st.secrets.keys()) if st.secrets else []
-            st.write(f"Available secrets: {available_secrets}")
+            try:
+                available_secrets = list(st.secrets.keys()) if st.secrets else []
+                st.write(f"Available secrets: {available_secrets}")
+                
+                # Check specific secrets
+                for key in ['FIRESTORE_PROJECT_ID', 'GEMINI_API_KEY', 'STREAMLIT_AUTH_COOKIE_KEY']:
+                    if key in st.secrets:
+                        st.write(f"✅ {key}: Found")
+                    else:
+                        st.write(f"❌ {key}: Missing")
+                
+                # Check environment variables after setup
+                env_vars = {
+                    'FIRESTORE_PROJECT_ID': os.environ.get('FIRESTORE_PROJECT_ID'),
+                    'GEMINI_API_KEY': os.environ.get('GEMINI_API_KEY'),
+                    'STREAMLIT_AUTH_COOKIE_KEY': os.environ.get('STREAMLIT_AUTH_COOKIE_KEY')
+                }
+                st.write("Environment variables after setup:")
+                for key, value in env_vars.items():
+                    st.write(f"{key}: {'Set' if value else 'Not set'}")
+                    
+            except Exception as debug_e:
+                st.write(f"Debug error: {debug_e}")
         else:
             st.write("No secrets object found")
         
