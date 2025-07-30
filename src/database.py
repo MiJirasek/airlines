@@ -16,25 +16,32 @@ class FirestoreManager:
     
     def _initialize_firestore(self):
         try:
+            import os
+            
             # Debug info
             print(f"DEBUG: Initializing Firestore with project_id: {Config.FIRESTORE_PROJECT_ID}")
             print(f"DEBUG: GOOGLE_APPLICATION_CREDENTIALS path: {Config.GOOGLE_APPLICATION_CREDENTIALS}")
             
+            # Set GOOGLE_CLOUD_PROJECT environment variable as backup
+            os.environ['GOOGLE_CLOUD_PROJECT'] = Config.FIRESTORE_PROJECT_ID
+            print(f"DEBUG: Set GOOGLE_CLOUD_PROJECT to: {Config.FIRESTORE_PROJECT_ID}")
+            
             if not firebase_admin._apps:
-                if Config.GOOGLE_APPLICATION_CREDENTIALS:
-                    print("DEBUG: Using service account credentials")
+                if Config.GOOGLE_APPLICATION_CREDENTIALS and os.path.exists(Config.GOOGLE_APPLICATION_CREDENTIALS):
+                    print("DEBUG: Using service account credentials file")
                     cred = credentials.Certificate(Config.GOOGLE_APPLICATION_CREDENTIALS)
                     firebase_admin.initialize_app(cred, {
                         'projectId': Config.FIRESTORE_PROJECT_ID,
                     })
                 else:
-                    print("DEBUG: Using default credentials")
+                    print("DEBUG: Using default credentials with explicit project")
                     # For Streamlit Cloud, we need to explicitly set the project
                     firebase_admin.initialize_app(options={
                         'projectId': Config.FIRESTORE_PROJECT_ID,
                     })
             
-            self.db = firestore.client()
+            # Create Firestore client with explicit project
+            self.db = firestore.client(project=Config.FIRESTORE_PROJECT_ID)
             print("DEBUG: Firestore client created successfully")
             
         except Exception as e:
